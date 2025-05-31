@@ -25,22 +25,23 @@ public class Program
             {
                 var startTime = DateTime.Now + TimeSpan.FromMinutes(4);
                 Console.WriteLine($"Presentation will be ran @ {startTime.ToString("HH:mm:ss")} local time.");
-                
+
                 await StarMqtt.PublishRunCue(LastPresId, startTime);
                 PresentationLoaded = false;
                 LastPresId = string.Empty;
 
                 continue;
             }
-            
+
             if (!DateTime.Now.Minute.ToString().Contains('4'))
             {
                 await Task.Delay(500);
                 continue;
             }
+
             var presentationId = RandomString(24);
             var cues = await GenerateLoads(CueType.LocalForecast);
-            
+
             await StarMqtt.PublishLoadCue(cues, presentationId);
             PresentationLoaded = true;
             LastPresId = presentationId;
@@ -49,12 +50,7 @@ public class Program
             await Task.Delay(12 * 1000);
         }
     }
-
-    public static async Task NoPresentationLoop()
-    {
-        
-    }
-
+    
     public static async Task<List<LoadCue>> GenerateLoads(CueType cueType)
     {
         var cueList = new List<LoadCue>();
@@ -85,12 +81,12 @@ public class Program
         return cueList;
     }
     
-    private static Random random = new();
+    private static Random _random = new();
     
     public static string RandomString(int length)
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         return new string(Enumerable.Repeat(chars, length)
-            .Select(s => s[random.Next(s.Length)]).ToArray());
+            .Select(s => s[_random.Next(s.Length)]).ToArray());
     }
 }
