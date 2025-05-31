@@ -1,4 +1,5 @@
-﻿using MQTTnet.Server;
+﻿using System.Reflection.Metadata.Ecma335;
+using MQTTnet.Server;
 using StarMqttClient.Commands;
 using WxStarManager;
 using WxStarManager.Models;
@@ -7,17 +8,25 @@ namespace StarCuer;
 
 public class Program
 {
-    public static StarMqttClient.StarMqttClient StarMqtt { get; private set; }
-    public static string LastPresId { get; set; } = string.Empty;
-    public static bool PresentationLoaded { get; set; }
+    private static StarMqttClient.StarMqttClient StarMqtt { get; set; }
+    private static string LastPresId { get; set; } = string.Empty;
+    private static bool PresentationLoaded { get; set; }
 
     public static async Task Main(string[] args)
     {
         Config config = Config.Load();
-        var client = new StarMqttClient.StarMqttClient(config.StarMqtt.Host,  config.StarMqtt.Port, config.StarMqtt.Username, config.StarMqtt.Password, "testclient");
+        List<int> lfLoadIntervals = new() { 5, 15, 25, 35, 45, 55 };
+        
+        var client = new StarMqttClient.StarMqttClient(config.StarMqtt.Host,  
+            config.StarMqtt.Port, 
+            config.StarMqtt.Username, 
+            config.StarMqtt.Password, 
+            "testclient");
+        
         StarMqtt = client;
 
         await StarMqtt.Connect();
+        Console.WriteLine(DateTime.Now.Hour);
 
         while (true)
         {
@@ -29,25 +38,41 @@ public class Program
                 await StarMqtt.PublishRunCue(LastPresId, startTime);
                 PresentationLoaded = false;
                 LastPresId = string.Empty;
-
+                
+                await Task.Delay(TimeSpan.FromSeconds(60));
+                
                 continue;
             }
 
-            if (!DateTime.Now.Minute.ToString().Contains('4'))
+            if (lfLoadIntervals.Contains(DateTime.Now.Minute))
             {
-                await Task.Delay(500);
-                continue;
+                var presentationId = RandomString(24);
+                var cues = await GenerateLoads(CueType.LocalForecast);
+
+                await StarMqtt.PublishLoadCue(cues, presentationId);
+                PresentationLoaded = true;
+                LastPresId = presentationId;
+
+                Console.WriteLine($"Loaded a presentation for {cues.Count()} units with id {presentationId}");
+
+                await Task.Delay(12 * 1000);
+            }
+            else
+            {
+                await Task.Delay(30 * 1000);
             }
 
-            var presentationId = RandomString(24);
-            var cues = await GenerateLoads(CueType.LocalForecast);
+            if (DateTime.Now.Hour == 0 && DateTime.Now.Minute == 0)
+            {
+                var presentationId = RandomString(24);
+                var cues = await GenerateLoads(CueType.LowerDisplayLine);
+                await StarMqtt.PublishLoadCue(cues, presentationId);
+                
+                PresentationLoaded = true;
+                LastPresId = presentationId;
+                await Task.Delay(10 * 1000);
+            }
 
-            await StarMqtt.PublishLoadCue(cues, presentationId);
-            PresentationLoaded = true;
-            LastPresId = presentationId;
-
-            Console.WriteLine($"Loaded a presentation for {cues.Count()} units with id {presentationId}");
-            await Task.Delay(12 * 1000);
         }
     }
     
