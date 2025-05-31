@@ -1,4 +1,5 @@
-﻿using StarMqttClient.Commands;
+﻿using MQTTnet.Server;
+using StarMqttClient.Commands;
 using WxStarManager;
 using WxStarManager.Models;
 
@@ -7,21 +8,51 @@ namespace StarCuer;
 public class Program
 {
     public static StarMqttClient.StarMqttClient StarMqtt { get; private set; }
+    public static string LastPresId { get; set; } = string.Empty;
+    public static bool PresentationLoaded { get; set; }
 
     public static async Task Main(string[] args)
     {
         Config config = Config.Load();
         var client = new StarMqttClient.StarMqttClient(config.StarMqtt.Host,  config.StarMqtt.Port, config.StarMqtt.Username, config.StarMqtt.Password, "testclient");
-        var presId = RandomString(24);
         StarMqtt = client;
 
         await StarMqtt.Connect();
 
-        var cues = await GenerateLoads(CueType.LocalForecast);
-        
-        await client.PublishLoadCue(cues, presId);
+        while (true)
+        {
+            if (PresentationLoaded)
+            {
+                var startTime = DateTime.Now + TimeSpan.FromMinutes(4);
+                Console.WriteLine($"Presentation will be ran @ {startTime.ToString("HH:mm:ss")} local time.");
+                
+                await StarMqtt.PublishRunCue(LastPresId, startTime);
+                PresentationLoaded = false;
+                LastPresId = string.Empty;
 
-        await client.PublishRunCue(presId, DateTime.UtcNow);
+                continue;
+            }
+            
+            if (!DateTime.Now.Minute.ToString().Contains('4'))
+            {
+                await Task.Delay(500);
+                continue;
+            }
+            var presentationId = RandomString(24);
+            var cues = await GenerateLoads(CueType.LocalForecast);
+            
+            await StarMqtt.PublishLoadCue(cues, presentationId);
+            PresentationLoaded = true;
+            LastPresId = presentationId;
+
+            Console.WriteLine($"Loaded a presentation for {cues.Count()} units with id {presentationId}");
+            await Task.Delay(12 * 1000);
+        }
+    }
+
+    public static async Task NoPresentationLoop()
+    {
+        
     }
 
     public static async Task<List<LoadCue>> GenerateLoads(CueType cueType)
