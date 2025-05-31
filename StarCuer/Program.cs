@@ -32,8 +32,28 @@ public class Program
         {
             if (PresentationLoaded)
             {
-                var startTime = DateTime.Now + TimeSpan.FromMinutes(4);
-                Console.WriteLine($"Presentation will be ran @ {startTime.ToString("HH:mm:ss")} local time.");
+                var t = 0;
+
+                if (Enumerable.Range(0, 9).Contains(DateTime.Now.Minute))
+                    t = 8 - DateTime.Now.Minute;
+                
+                if (Enumerable.Range(10, 19).Contains(DateTime.Now.Minute))
+                    t = 18 - DateTime.Now.Minute;
+                
+                if (Enumerable.Range(20, 29).Contains(DateTime.Now.Minute))
+                    t = 28 - DateTime.Now.Minute;
+                
+                if (Enumerable.Range(30, 39).Contains(DateTime.Now.Minute))
+                    t = 38 - DateTime.Now.Minute;
+                
+                if (Enumerable.Range(40, 49).Contains(DateTime.Now.Minute))
+                    t = 48 - DateTime.Now.Minute;
+                
+                if (Enumerable.Range(50, 59).Contains(DateTime.Now.Minute))
+                    t = 58 - DateTime.Now.Minute;
+                
+                var startTime = DateTime.Now + TimeSpan.FromMinutes(t) - TimeSpan.FromSeconds(DateTime.Now.Second);
+                Console.WriteLine($"Presentation will be ran @ {startTime.ToString("HH:mm:00")} local time.");
 
                 await StarMqtt.PublishRunCue(LastPresId, startTime);
                 PresentationLoaded = false;
@@ -55,11 +75,11 @@ public class Program
 
                 Console.WriteLine($"Loaded a presentation for {cues.Count()} units with id {presentationId}");
 
-                await Task.Delay(12 * 1000);
+                await Task.Delay(10 * 1000);
             }
             else
             {
-                await Task.Delay(30 * 1000);
+                await Task.Delay(10 * 1000);
             }
 
             if (DateTime.Now.Hour == 0 && DateTime.Now.Minute == 0)
