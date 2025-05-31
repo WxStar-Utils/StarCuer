@@ -10,8 +10,9 @@ public class Config
 
     [XmlElement] public string StarApiEndpoint { get; set; } = "http://127.0.0.1:8000";
     [XmlElement] public bool IgnoreDesiredFlavors { get; set; } = false;
-    [XmlElement] public string OverrideLf { get; set; } = "domestic/v";
-    [XmlElement] public string OverrideLdl { get; set; } = "domestic/ldlC";
+    [XmlElement] public string OverrideLfi2 { get; set; } = "domestic/v";
+    [XmlElement] public string OverrideLdli2 { get; set; } = "domestic/ldlC";
+    [XmlElement] public string OverrideLfi1 { get; set; } = "local E";
     [XmlElement] public StarMqttConfig StarMqtt { get; set; } = new();
 
     public static Config config = new();
