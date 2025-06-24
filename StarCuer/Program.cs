@@ -52,7 +52,7 @@ public class Program
                 if (Enumerable.Range(50, 59).Contains(DateTime.Now.Minute))
                     t = 58 - DateTime.Now.Minute;
                 
-                var startTime = DateTime.Now + TimeSpan.FromMinutes(t) - TimeSpan.FromSeconds(DateTime.Now.Second);
+                var startTime = DateTime.UtcNow + TimeSpan.FromMinutes(t) - TimeSpan.FromSeconds(DateTime.UtcNow.Second);
                 Console.WriteLine($"Presentation will be ran @ {startTime.ToString("HH:mm:00")} local time.");
 
                 await StarMqtt.PublishRunCue(LastPresId, startTime);
