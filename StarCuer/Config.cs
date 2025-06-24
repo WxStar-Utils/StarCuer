@@ -52,6 +52,6 @@ public class StarMqttConfig
 {
     [XmlElement] public string Host { get; set; } = "127.0.0.1";
     [XmlElement] public int Port { get; set; } = 1883;
-    [XmlElement] public string Username { get; set; } = "REPLACE_ME"
-    [XmlElement] public string Password { get; set; } = "REPLACE_ME"
+    [XmlElement] public string Username { get; set; } = "REPLACE_ME";
+    [XmlElement] public string Password { get; set; } = "REPLACE_ME";
 }
